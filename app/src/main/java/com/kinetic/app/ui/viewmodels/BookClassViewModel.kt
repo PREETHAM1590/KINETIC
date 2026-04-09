@@ -44,7 +44,6 @@ class BookClassViewModel @Inject constructor(
     private fun observeClasses() {
         viewModelScope.launch {
             selectedCategory
-                .distinctUntilChanged()
                 .onEach { category ->
                     _uiState.update {
                         it.copy(

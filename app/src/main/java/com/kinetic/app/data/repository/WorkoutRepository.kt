@@ -22,7 +22,7 @@ interface WorkoutRepository {
 }
 
 @Singleton
-class FakeWorkoutRepository @Inject constructor() : WorkoutRepository {
+open class FakeWorkoutRepository @Inject constructor() : WorkoutRepository {
 
     override fun getWorkouts(): Flow<List<WorkoutItem>> = flow {
         delay(300)
