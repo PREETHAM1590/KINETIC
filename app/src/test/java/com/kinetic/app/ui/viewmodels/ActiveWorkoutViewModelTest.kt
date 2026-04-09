@@ -1,10 +1,19 @@
 package com.kinetic.app.ui.viewmodels
 
 import com.google.common.truth.Truth.assertThat
+import com.kinetic.app.data.models.ActiveWorkout
+import com.kinetic.app.data.models.ExerciseItem
+import com.kinetic.app.data.models.HiitItem
+import com.kinetic.app.data.models.WorkoutItem
 import com.kinetic.app.data.repository.FakeWorkoutRepository
+import com.kinetic.app.data.repository.WorkoutRepository
+import com.kinetic.app.data.store.UserActivityStore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -30,7 +39,10 @@ class ActiveWorkoutViewModelTest {
 
     @Test
     fun init_loadsDefaultActiveWorkout() = runTest {
-        val viewModel = ActiveWorkoutViewModel(FakeWorkoutRepository())
+        val viewModel = ActiveWorkoutViewModel(
+            FakeWorkoutRepository(),
+            UserActivityStore()
+        )
 
         advanceUntilIdle()
 
@@ -41,7 +53,10 @@ class ActiveWorkoutViewModelTest {
 
     @Test
     fun startTimer_marksWorkoutAsRunning() = runTest {
-        val viewModel = ActiveWorkoutViewModel(FakeWorkoutRepository())
+        val viewModel = ActiveWorkoutViewModel(
+            FakeWorkoutRepository(),
+            UserActivityStore()
+        )
 
         advanceUntilIdle()
         viewModel.startTimer()
@@ -52,7 +67,10 @@ class ActiveWorkoutViewModelTest {
 
     @Test
     fun completeSet_startsRestWithoutDroppingRestState() = runTest {
-        val viewModel = ActiveWorkoutViewModel(FakeWorkoutRepository())
+        val viewModel = ActiveWorkoutViewModel(
+            FakeWorkoutRepository(),
+            UserActivityStore()
+        )
 
         advanceUntilIdle()
         viewModel.completeSet()
@@ -66,7 +84,10 @@ class ActiveWorkoutViewModelTest {
 
     @Test
     fun loadWorkoutById_switchesWorkout() = runTest {
-        val viewModel = ActiveWorkoutViewModel(FakeWorkoutRepository())
+        val viewModel = ActiveWorkoutViewModel(
+            FakeWorkoutRepository(),
+            UserActivityStore()
+        )
 
         advanceUntilIdle()
         viewModel.loadWorkoutById("aw2")
@@ -74,5 +95,40 @@ class ActiveWorkoutViewModelTest {
 
         val state = viewModel.uiState.value as ActiveWorkoutUiState.Success
         assertThat(state.data.workout.id).isEqualTo("aw2")
+    }
+
+    @Test
+    fun completeExercise_onLastExercise_recordsWorkoutCompleted() = runTest {
+        val singleExerciseWorkout = ActiveWorkout(
+            id = "aw-single",
+            title = "Single Exercise Test",
+            difficulty = "Easy",
+            durationMin = 10,
+            caloriesPerMin = 60,
+            exercises = listOf(ExerciseItem("ex1", "Squat", sets = 1, reps = 10, weightLbs = 50))
+        )
+        val singleExerciseRepo = object : WorkoutRepository {
+            override fun getWorkouts(): Flow<List<WorkoutItem>> = flow { emit(emptyList()) }
+            override fun getHiitWorkouts(): Flow<List<HiitItem>> = flow { emit(emptyList()) }
+            override fun getWorkoutById(id: String): Flow<WorkoutItem?> = flow { emit(null) }
+            override fun getWorkoutByTitle(title: String): Flow<WorkoutItem?> = flow { emit(null) }
+            override fun getExercisesForWorkout(workoutId: String): Flow<List<ExerciseItem>> = flow { emit(emptyList()) }
+            override fun getActiveWorkoutById(id: String): Flow<ActiveWorkout?> = flow { emit(singleExerciseWorkout) }
+            override fun getFilteredWorkouts(category: String): Flow<List<WorkoutItem>> = flow { emit(emptyList()) }
+        }
+        val store = UserActivityStore()
+        val vm = ActiveWorkoutViewModel(
+            workoutRepository = singleExerciseRepo,
+            userActivityStore = store
+        )
+
+        advanceUntilIdle()
+        vm.startTimer()
+        advanceTimeBy(1_001L) // advance 1 second so caloriesBurned = (1 * 60) / 60 = 1
+        advanceUntilIdle()
+
+        vm.completeExercise()
+
+        assertThat(store.state.value.todayCaloriesBurned).isGreaterThan(0)
     }
 }

@@ -35,11 +35,13 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.kinetic.app.data.models.HiitItem
 import com.kinetic.app.data.models.WorkoutItem
+import com.kinetic.app.ui.components.CoachBanner
 import com.kinetic.app.ui.components.KineticCard
 import com.kinetic.app.ui.components.LimeBadge
 import com.kinetic.app.ui.components.ScreenHeadline
 import com.kinetic.app.ui.navigation.Screen
 import com.kinetic.app.ui.theme.*
+import com.kinetic.app.ui.viewmodels.CoachViewModel
 import com.kinetic.app.ui.viewmodels.WorkoutsUiState
 import com.kinetic.app.ui.viewmodels.WorkoutsViewModel
 
@@ -47,9 +49,11 @@ import com.kinetic.app.ui.viewmodels.WorkoutsViewModel
 fun WorkoutsScreen(
     navController: NavHostController,
     modifier: Modifier = Modifier,
-    viewModel: WorkoutsViewModel = hiltViewModel()
+    viewModel: WorkoutsViewModel = hiltViewModel(),
+    coachViewModel: CoachViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val topInsight by coachViewModel.topInsight.collectAsStateWithLifecycle()
 
     Scaffold(
         floatingActionButton = {
@@ -80,7 +84,21 @@ fun WorkoutsScreen(
         ) {
             ScreenHeadline(title = "WORKOUTS", subtitle = "PUSH YOUR LIMITS")
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // Show CoachBanner if there are insights
+            if (topInsight != null) {
+                CoachBanner(
+                    insight = topInsight,
+                    onActionClick = { route ->
+                        navController.navigate(route)
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
 
             if (uiState.isLoading) {
                 Box(

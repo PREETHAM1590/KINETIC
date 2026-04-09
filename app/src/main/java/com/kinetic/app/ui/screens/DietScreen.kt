@@ -46,20 +46,24 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.kinetic.app.data.models.MealItem
+import com.kinetic.app.ui.components.CoachBanner
 import com.kinetic.app.ui.components.KineticCard
 import com.kinetic.app.ui.components.LimeBadge
 import com.kinetic.app.ui.components.ScreenHeadline
 import com.kinetic.app.ui.navigation.Screen
 import com.kinetic.app.ui.theme.*
+import com.kinetic.app.ui.viewmodels.CoachViewModel
 import com.kinetic.app.ui.viewmodels.DietViewModel
 
 @Composable
 fun DietScreen(
     navController: NavHostController,
     modifier: Modifier = Modifier,
-    viewModel: DietViewModel = hiltViewModel()
+    viewModel: DietViewModel = hiltViewModel(),
+    coachViewModel: CoachViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val topInsight by coachViewModel.topInsight.collectAsStateWithLifecycle()
     val nutrition = uiState.dailyNutrition
 
     // Animated calorie progress
@@ -100,7 +104,21 @@ fun DietScreen(
         ) {
             ScreenHeadline(title = "DIET", subtitle = "FUEL YOUR BODY")
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // Show CoachBanner if there are insights
+            if (topInsight != null) {
+                CoachBanner(
+                    insight = topInsight,
+                    onActionClick = { route ->
+                        navController.navigate(route)
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
 
             if (uiState.isLoading || nutrition == null) {
                 Box(

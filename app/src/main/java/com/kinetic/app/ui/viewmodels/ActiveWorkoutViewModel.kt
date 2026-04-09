@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.kinetic.app.data.models.ActiveWorkout
 import com.kinetic.app.data.repository.WorkoutRepository
+import com.kinetic.app.data.store.UserActivityStore
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -37,7 +38,8 @@ sealed class ActiveWorkoutUiState {
 
 @HiltViewModel
 class ActiveWorkoutViewModel @Inject constructor(
-    private val workoutRepository: WorkoutRepository
+    private val workoutRepository: WorkoutRepository,
+    private val userActivityStore: UserActivityStore
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<ActiveWorkoutUiState>(ActiveWorkoutUiState.Loading)
     val uiState: StateFlow<ActiveWorkoutUiState> = _uiState.asStateFlow()
@@ -122,6 +124,10 @@ class ActiveWorkoutViewModel @Inject constructor(
         _uiState.value = ActiveWorkoutUiState.Success(
             state.copy(isRunning = false, timeLeft = 0f)
         )
+        // Record the completed workout
+        if (state.caloriesBurned > 0) {
+            userActivityStore.recordWorkoutCompleted(state.caloriesBurned)
+        }
     }
 
     fun completeSet() {
@@ -149,6 +155,7 @@ class ActiveWorkoutViewModel @Inject constructor(
         val nextIndex = state.currentExerciseIndex + 1
         if (nextIndex >= state.workout.exercises.size) {
             stopTimer()
+            userActivityStore.recordWorkoutCompleted(state.caloriesBurned)
             return
         }
         val nextExercise = state.workout.exercises[nextIndex]
