@@ -1,0 +1,7 @@
+﻿- 2026-04-09 review: ActiveWorkoutViewModel completeSet currently overwrites rest state after calling startRest; prefer atomic state update or calling startRest after state mutation.
+- 2026-04-09 review: Settings dark mode preference is persisted but Theme.kt is fixed to one scheme; keep settings toggles wired to actual UI behavior.
+- 2026-04-09 review: Avoid AuthResult.Success with empty uid fallback in Firebase auth flows; treat null user as error.
+- 2026-04-09 review: Prefer explicit popUpTo(findStartDestination()) over popUpTo(0) for predictable back stack clearing.
+- 2026-04-09 testing: Unit tests use JUnit4 + Truth + kotlinx-coroutines-test with StandardTestDispatcher and Dispatchers.setMain/resetMain in setup/teardown.
+- 2026-04-09 testing: ViewModel tests in this repo prioritize state transitions and routing outcomes, using in-memory fakes from app/src/test/java/com/kinetic/app/ui/viewmodels/TestFakes.kt.
+- 2026-04-09 testing: Baseline after adding Auth/Consent/Startup tests is 110 debug unit tests passing (0 failures, 0 errors, 0 skipped).
