@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.kinetic.app.data.models.DailyNutrition
 import com.kinetic.app.data.models.MealItem
 import com.kinetic.app.data.repository.DietRepository
+import com.kinetic.app.data.store.UserActivityStore
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -23,7 +24,8 @@ data class DietUiState(
 
 @HiltViewModel
 class DietViewModel @Inject constructor(
-    private val dietRepository: DietRepository
+    private val dietRepository: DietRepository,
+    private val activityStore: UserActivityStore
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(DietUiState())
@@ -50,5 +52,9 @@ class DietViewModel @Inject constructor(
                 _uiState.value = state
             }
         }
+    }
+
+    fun logMeal(calories: Int) {
+        activityStore.recordMealLogged(calories)
     }
 }
