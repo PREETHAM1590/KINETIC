@@ -3,16 +3,18 @@ package com.kinetic.app.data.store
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import java.util.Calendar
 import javax.inject.Inject
 import javax.inject.Singleton
 
 data class UserActivityState(
     val todayCaloriesBurned: Int = 0,
     val todayCaloriesConsumed: Int = 0,
-    val targetCalories: Int = 2500,
+    val targetCalories: Int = 2500, // default adult maintenance estimate; overridden post-onboarding
     val currentStreakDays: Int = 0,
-    val lastWorkoutTimestampMs: Long = 0L,
-    val lastMealTimestampMs: Long = 0L,
+    val lastWorkoutTimestampMs: Long? = null,
+    val lastMealTimestampMs: Long? = null,
     val missedSessionsInRow: Int = 0
 )
 
@@ -22,28 +24,45 @@ class UserActivityStore @Inject constructor() {
     val state: StateFlow<UserActivityState> = _state.asStateFlow()
 
     fun recordWorkoutCompleted(caloriesBurned: Int) {
-        _state.value = _state.value.copy(
-            todayCaloriesBurned = _state.value.todayCaloriesBurned + caloriesBurned,
-            lastWorkoutTimestampMs = System.currentTimeMillis(),
-            missedSessionsInRow = 0,
-            currentStreakDays = _state.value.currentStreakDays + 1
-        )
+        val now = System.currentTimeMillis()
+        _state.update { current ->
+            val alreadyLoggedToday = current.lastWorkoutTimestampMs?.let {
+                isSameCalendarDay(it, now)
+            } ?: false
+            current.copy(
+                todayCaloriesBurned = current.todayCaloriesBurned + caloriesBurned,
+                lastWorkoutTimestampMs = now,
+                missedSessionsInRow = 0,
+                currentStreakDays = if (alreadyLoggedToday) current.currentStreakDays
+                                    else current.currentStreakDays + 1
+            )
+        }
     }
 
     fun recordMealLogged(calories: Int) {
-        _state.value = _state.value.copy(
-            todayCaloriesConsumed = _state.value.todayCaloriesConsumed + calories,
-            lastMealTimestampMs = System.currentTimeMillis()
-        )
+        _state.update { current ->
+            current.copy(
+                todayCaloriesConsumed = current.todayCaloriesConsumed + calories,
+                lastMealTimestampMs = System.currentTimeMillis()
+            )
+        }
     }
 
+    // Called by a daily background scheduler when no workout was recorded by end-of-day.
     fun recordSessionMissed() {
-        _state.value = _state.value.copy(
-            missedSessionsInRow = _state.value.missedSessionsInRow + 1
-        )
+        _state.update { current ->
+            current.copy(missedSessionsInRow = current.missedSessionsInRow + 1)
+        }
     }
 
     fun setTargetCalories(target: Int) {
-        _state.value = _state.value.copy(targetCalories = target)
+        _state.update { current -> current.copy(targetCalories = target) }
+    }
+
+    private fun isSameCalendarDay(tsA: Long, tsB: Long): Boolean {
+        val calA = Calendar.getInstance().apply { timeInMillis = tsA }
+        val calB = Calendar.getInstance().apply { timeInMillis = tsB }
+        return calA.get(Calendar.YEAR) == calB.get(Calendar.YEAR) &&
+               calA.get(Calendar.DAY_OF_YEAR) == calB.get(Calendar.DAY_OF_YEAR)
     }
 }
