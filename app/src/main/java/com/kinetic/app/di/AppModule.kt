@@ -1,14 +1,15 @@
 package com.kinetic.app.di
 
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import com.kinetic.app.data.repository.AuthRepository
 import com.kinetic.app.data.repository.AuthRepositoryImpl
 import com.kinetic.app.data.repository.DietRepository
-import com.kinetic.app.data.repository.FakeDietRepository
-import com.kinetic.app.data.repository.FakeMembershipRepository
-import com.kinetic.app.data.repository.FakeProfileRepository
-import com.kinetic.app.data.repository.FakeReportsRepository
-import com.kinetic.app.data.repository.FakeWorkoutRepository
+import com.kinetic.app.data.repository.FirebaseDietRepository
+import com.kinetic.app.data.repository.FirebaseMembershipRepository
+import com.kinetic.app.data.repository.FirebaseProfileRepository
+import com.kinetic.app.data.repository.FirebaseReportsRepository
+import com.kinetic.app.data.repository.FirebaseWorkoutRepository
 import com.kinetic.app.data.repository.MembershipRepository
 import com.kinetic.app.data.repository.ProfileRepository
 import com.kinetic.app.data.repository.ReportsRepository
@@ -28,23 +29,23 @@ abstract class AppModule {
 
     @Binds
     @Singleton
-    abstract fun bindWorkoutRepository(impl: FakeWorkoutRepository): WorkoutRepository
+    abstract fun bindWorkoutRepository(impl: FirebaseWorkoutRepository): WorkoutRepository
 
     @Binds
     @Singleton
-    abstract fun bindDietRepository(impl: FakeDietRepository): DietRepository
+    abstract fun bindDietRepository(impl: FirebaseDietRepository): DietRepository
 
     @Binds
     @Singleton
-    abstract fun bindReportsRepository(impl: FakeReportsRepository): ReportsRepository
+    abstract fun bindReportsRepository(impl: FirebaseReportsRepository): ReportsRepository
 
     @Binds
     @Singleton
-    abstract fun bindMembershipRepository(impl: FakeMembershipRepository): MembershipRepository
+    abstract fun bindMembershipRepository(impl: FirebaseMembershipRepository): MembershipRepository
 
     @Binds
     @Singleton
-    abstract fun bindProfileRepository(impl: FakeProfileRepository): ProfileRepository
+    abstract fun bindProfileRepository(impl: FirebaseProfileRepository): ProfileRepository
 
     @Binds
     @Singleton
@@ -58,5 +59,9 @@ abstract class AppModule {
         @Provides
         @Singleton
         fun provideFirebaseAuth(): FirebaseAuth = FirebaseAuth.getInstance()
+
+        @Provides
+        @Singleton
+        fun provideFirestore(): FirebaseFirestore = FirebaseFirestore.getInstance()
     }
 }
