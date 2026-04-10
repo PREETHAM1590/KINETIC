@@ -79,6 +79,7 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:32.7.2"))
     implementation("com.google.firebase:firebase-auth-ktx")
     implementation("com.google.firebase:firebase-firestore-ktx")
+    implementation("com.google.firebase:firebase-functions-ktx:20.4.0")
 
     implementation("com.google.accompanist:accompanist-permissions:0.34.0")
 

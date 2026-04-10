@@ -98,8 +98,19 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 if (authRepository.isSignedIn()) {
-                    when (val result = authRepository.deleteAccount()) {
+                    // Step 1: Erase all Firestore data server-side (GDPR/DPDP right-to-erasure)
+                    when (val eraseResult = authRepository.eraseUserData()) {
+                        is AuthResult.Error -> {
+                            _uiState.value = _uiState.value.copy(
+                                isSaving = false,
+                                error = eraseResult.message
+                            )
+                            return@launch
+                        }
                         is AuthResult.Success -> Unit
+                    }
+                    // Step 2: Delete Firebase Auth account
+                    when (val result = authRepository.deleteAccount()) {
                         is AuthResult.Error -> {
                             _uiState.value = _uiState.value.copy(
                                 isSaving = false,
@@ -107,8 +118,10 @@ class SettingsViewModel @Inject constructor(
                             )
                             return@launch
                         }
+                        is AuthResult.Success -> Unit
                     }
                 }
+                // Step 3: Clear local prefs
                 settingsRepository.clearAllData()
                 _uiState.value = _uiState.value.copy(isSaving = false)
                 onComplete()

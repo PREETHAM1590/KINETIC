@@ -59,7 +59,8 @@ class InMemorySettingsRepository(
 
 class InMemoryAuthRepository(
     private var signedIn: Boolean = false,
-    var deleteResult: AuthResult = AuthResult.Success("test-user")
+    var deleteResult: AuthResult = AuthResult.Success("test-user"),
+    var eraseResult: AuthResult = AuthResult.Success("test-user")
 ) : AuthRepository {
 
     override val currentUser: Flow<FirebaseUser?> = flowOf(null)
@@ -84,6 +85,8 @@ class InMemoryAuthRepository(
         }
         return deleteResult
     }
+
+    override suspend fun eraseUserData(): AuthResult = eraseResult
 
     override fun isSignedIn(): Boolean = signedIn
 }

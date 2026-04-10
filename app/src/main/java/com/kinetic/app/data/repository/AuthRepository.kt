@@ -2,6 +2,8 @@ package com.kinetic.app.data.repository
 
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.functions.ktx.functions
+import com.google.firebase.ktx.Firebase
 import com.kinetic.app.data.models.AuthResult
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -16,6 +18,7 @@ interface AuthRepository {
     suspend fun signUp(email: String, password: String): AuthResult
     suspend fun signOut()
     suspend fun deleteAccount(): AuthResult
+    suspend fun eraseUserData(): AuthResult
     fun isSignedIn(): Boolean
 }
 
@@ -71,6 +74,18 @@ class AuthRepositoryImpl @Inject constructor(
             AuthResult.Success(user.uid)
         } catch (e: Exception) {
             AuthResult.Error(e.message ?: "Account deletion failed")
+        }
+    }
+
+    override suspend fun eraseUserData(): AuthResult {
+        return try {
+            Firebase.functions
+                .getHttpsCallable("deleteUserData")
+                .call()
+                .await()
+            AuthResult.Success(firebaseAuth.currentUser?.uid ?: "")
+        } catch (e: Exception) {
+            AuthResult.Error(e.message ?: "Failed to erase user data")
         }
     }
 
