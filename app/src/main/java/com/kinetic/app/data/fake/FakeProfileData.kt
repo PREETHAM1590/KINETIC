@@ -1,21 +1,29 @@
 package com.kinetic.app.data.fake
 
 import com.kinetic.app.data.models.Achievement
+import com.kinetic.app.data.models.ExperienceLevel
+import com.kinetic.app.data.models.FitnessGoal
 import com.kinetic.app.data.models.UserProfile
 import com.kinetic.app.data.models.UserStats
 
 object FakeProfileData {
     val userProfile = UserProfile(
-        name = "Alex Thunder",
+        uid = "fake_user_1",
+        displayName = "Alex Thunder",
         email = "alex@kinetic.fit",
-        memberSince = "Jan 2025",
-        currentTier = "PRO",
-        stats = UserStats(
-            workoutsCompleted = 147,
-            caloriesBurned = 68420,
-            streakDays = 23,
-            totalHours = 186.5f
-        )
+        membershipTierId = "pro",
+        fitnessGoal = FitnessGoal.MUSCLE_GAIN,
+        experienceLevel = ExperienceLevel.INTERMEDIATE,
+        heightCm = 182f,
+        weightKg = 84f,
+        onboardingComplete = true
+    )
+
+    val userStats = UserStats(
+        workoutsCompleted = 147,
+        caloriesBurned = 68420,
+        streakDays = 23,
+        totalHours = 186.5f
     )
 
     val achievements = listOf(

@@ -1,10 +1,12 @@
 package com.kinetic.app.ui.viewmodels
 
 import com.google.common.truth.Truth.assertThat
+import com.kinetic.app.data.local.UserPreferences
 import com.kinetic.app.data.repository.FakeDietRepository
 import com.kinetic.app.data.store.UserActivityStore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -14,11 +16,19 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class DietViewModelTest {
 
     private val testDispatcher = StandardTestDispatcher()
+    private val mockPrefs: UserPreferences = mock()
+
+    private fun makeStore(): UserActivityStore {
+        whenever(mockPrefs.targetCalories).thenReturn(flowOf(2500))
+        return UserActivityStore(mockPrefs)
+    }
 
     @Before
     fun setUp() {
@@ -34,7 +44,7 @@ class DietViewModelTest {
     fun loadData_populatesMealsAndNutrition() = runTest {
         val viewModel = DietViewModel(
             FakeDietRepository(),
-            UserActivityStore()
+            makeStore()
         )
 
         advanceUntilIdle()
@@ -49,7 +59,7 @@ class DietViewModelTest {
     fun meals_matchTotalsShape() = runTest {
         val viewModel = DietViewModel(
             FakeDietRepository(),
-            UserActivityStore()
+            makeStore()
         )
 
         advanceUntilIdle()
@@ -62,7 +72,7 @@ class DietViewModelTest {
 
     @Test
     fun `logMeal records calories in UserActivityStore`() = runTest {
-        val store = UserActivityStore()
+        val store = makeStore()
         val vm = DietViewModel(dietRepository = FakeDietRepository(), activityStore = store)
         advanceUntilIdle()
 

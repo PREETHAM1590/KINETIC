@@ -1,6 +1,7 @@
 package com.kinetic.app.ui.viewmodels
 
 import com.google.common.truth.Truth.assertThat
+import com.kinetic.app.data.local.UserPreferences
 import com.kinetic.app.data.models.ActiveWorkout
 import com.kinetic.app.data.models.ExerciseItem
 import com.kinetic.app.data.models.HiitItem
@@ -12,6 +13,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -21,11 +23,19 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ActiveWorkoutViewModelTest {
 
     private val testDispatcher = StandardTestDispatcher()
+    private val mockPrefs: UserPreferences = mock()
+
+    private fun makeStore(): UserActivityStore {
+        whenever(mockPrefs.targetCalories).thenReturn(flowOf(2500))
+        return UserActivityStore(mockPrefs)
+    }
 
     @Before
     fun setUp() {
@@ -41,7 +51,7 @@ class ActiveWorkoutViewModelTest {
     fun init_loadsDefaultActiveWorkout() = runTest {
         val viewModel = ActiveWorkoutViewModel(
             FakeWorkoutRepository(),
-            UserActivityStore()
+            makeStore()
         )
 
         advanceUntilIdle()
@@ -55,7 +65,7 @@ class ActiveWorkoutViewModelTest {
     fun startTimer_marksWorkoutAsRunning() = runTest {
         val viewModel = ActiveWorkoutViewModel(
             FakeWorkoutRepository(),
-            UserActivityStore()
+            makeStore()
         )
 
         advanceUntilIdle()
@@ -69,7 +79,7 @@ class ActiveWorkoutViewModelTest {
     fun completeSet_startsRestWithoutDroppingRestState() = runTest {
         val viewModel = ActiveWorkoutViewModel(
             FakeWorkoutRepository(),
-            UserActivityStore()
+            makeStore()
         )
 
         advanceUntilIdle()
@@ -86,7 +96,7 @@ class ActiveWorkoutViewModelTest {
     fun loadWorkoutById_switchesWorkout() = runTest {
         val viewModel = ActiveWorkoutViewModel(
             FakeWorkoutRepository(),
-            UserActivityStore()
+            makeStore()
         )
 
         advanceUntilIdle()
@@ -116,7 +126,7 @@ class ActiveWorkoutViewModelTest {
             override fun getActiveWorkoutById(id: String): Flow<ActiveWorkout?> = flow { emit(singleExerciseWorkout) }
             override fun getFilteredWorkouts(category: String): Flow<List<WorkoutItem>> = flow { emit(emptyList()) }
         }
-        val store = UserActivityStore()
+        val store = makeStore()
         val vm = ActiveWorkoutViewModel(
             workoutRepository = singleExerciseRepo,
             userActivityStore = store

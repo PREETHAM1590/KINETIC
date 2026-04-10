@@ -1,19 +1,24 @@
 package com.kinetic.app.data.store
 
+import com.kinetic.app.data.local.UserPreferences
+import kotlinx.coroutines.flow.flowOf
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 
 class UserActivityStoreTest {
 
     private lateinit var store: UserActivityStore
+    private val mockPrefs: UserPreferences = mock()
 
     @Before
     fun setUp() {
-        store = UserActivityStore()
+        whenever(mockPrefs.targetCalories).thenReturn(flowOf(2500))
+        store = UserActivityStore(mockPrefs)
     }
 
     @Test

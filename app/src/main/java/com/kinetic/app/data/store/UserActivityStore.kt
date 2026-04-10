@@ -1,5 +1,7 @@
 package com.kinetic.app.data.store
 
+import com.kinetic.app.data.local.UserPreferences
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -11,7 +13,7 @@ import javax.inject.Singleton
 data class UserActivityState(
     val todayCaloriesBurned: Int = 0,
     val todayCaloriesConsumed: Int = 0,
-    val targetCalories: Int = 2500, // default adult maintenance estimate; overridden post-onboarding
+    val targetCalories: Int = 2500,
     val currentStreakDays: Int = 0,
     val lastWorkoutTimestampMs: Long? = null,
     val lastMealTimestampMs: Long? = null,
@@ -19,9 +21,13 @@ data class UserActivityState(
 )
 
 @Singleton
-class UserActivityStore @Inject constructor() {
+class UserActivityStore @Inject constructor(
+    private val prefs: UserPreferences
+) {
     private val _state = MutableStateFlow(UserActivityState())
     val state: StateFlow<UserActivityState> = _state.asStateFlow()
+
+    val targetCalories: Flow<Int> = prefs.targetCalories
 
     fun recordWorkoutCompleted(caloriesBurned: Int) {
         val now = System.currentTimeMillis()
@@ -48,7 +54,6 @@ class UserActivityStore @Inject constructor() {
         }
     }
 
-    // Called by a daily background scheduler when no workout was recorded by end-of-day.
     fun recordSessionMissed() {
         _state.update { current ->
             current.copy(missedSessionsInRow = current.missedSessionsInRow + 1)

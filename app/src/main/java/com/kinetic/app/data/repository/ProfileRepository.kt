@@ -3,6 +3,7 @@ package com.kinetic.app.data.repository
 import com.kinetic.app.data.fake.FakeProfileData
 import com.kinetic.app.data.models.Achievement
 import com.kinetic.app.data.models.UserProfile
+import com.kinetic.app.data.models.UserStats
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -12,6 +13,7 @@ import javax.inject.Singleton
 interface ProfileRepository {
     fun getProfile(): Flow<UserProfile>
     fun getAchievements(): Flow<List<Achievement>>
+    fun getStats(): Flow<UserStats>
 }
 
 @Singleton
@@ -25,5 +27,10 @@ class FakeProfileRepository @Inject constructor() : ProfileRepository {
     override fun getAchievements(): Flow<List<Achievement>> = flow {
         delay(300)
         emit(FakeProfileData.achievements)
+    }
+
+    override fun getStats(): Flow<UserStats> = flow {
+        delay(300)
+        emit(FakeProfileData.userStats)
     }
 }

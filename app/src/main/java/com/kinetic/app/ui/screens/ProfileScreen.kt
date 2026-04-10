@@ -115,7 +115,7 @@ fun ProfileScreen(
             Spacer(modifier = Modifier.width(16.dp))
             Column {
                 Text(
-                    text = profile.name.uppercase(),
+                    text = profile.displayName.uppercase(),
                     color = TextPrimary,
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Black,
@@ -124,10 +124,10 @@ fun ProfileScreen(
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    LimeBadge(text = profile.currentTier)
+                    LimeBadge(text = profile.membershipTierId.uppercase())
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "Since ${profile.memberSince}",
+                        text = "Member",
                         color = TextMuted,
                         fontSize = 12.sp
                     )
@@ -143,13 +143,13 @@ fun ProfileScreen(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             ProfileStatCard(
-                value = "${profile.stats.workoutsCompleted}",
+                value = "${uiState.stats?.workoutsCompleted ?: 0}",
                 label = "WORKOUTS",
                 modifier = Modifier.weight(1f)
             )
             Spacer(modifier = Modifier.width(8.dp))
             ProfileStatCard(
-                value = "${profile.stats.caloriesBurned / 1000}K",
+                value = "${(uiState.stats?.caloriesBurned ?: 0) / 1000}K",
                 label = "CALORIES",
                 modifier = Modifier.weight(1f)
             )
@@ -160,13 +160,13 @@ fun ProfileScreen(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             ProfileStatCard(
-                value = "${profile.stats.streakDays}",
+                value = "${uiState.stats?.streakDays ?: 0}",
                 label = "STREAK",
                 modifier = Modifier.weight(1f)
             )
             Spacer(modifier = Modifier.width(8.dp))
             ProfileStatCard(
-                value = "${profile.stats.totalHours.toInt()}h",
+                value = "${uiState.stats?.totalHours?.toInt() ?: 0}h",
                 label = "TOTAL TIME",
                 modifier = Modifier.weight(1f)
             )

@@ -1,6 +1,5 @@
 package com.kinetic.app.ui.viewmodels
 
-import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -28,132 +27,112 @@ class AICalorieScannerViewModelTest {
     }
 
     @Test
-    fun initialState_isIdle() = runTest {
+    fun initialState_isNotLoading() = runTest {
         val viewModel = AICalorieScannerViewModel()
-        val state = viewModel.uiState.value as AICalorieScannerUiState.Success
-        assertThat(state.scanState).isInstanceOf(ScanState.Idle::class.java)
+        assertThat(viewModel.uiState.value.isLoading).isFalse()
     }
 
     @Test
-    fun initialState_hasNoScanResult() = runTest {
+    fun initialState_hasNoFoodResult() = runTest {
         val viewModel = AICalorieScannerViewModel()
-        val state = viewModel.uiState.value as AICalorieScannerUiState.Success
-        assertThat(state.scanResult).isNull()
+        assertThat(viewModel.uiState.value.foodResult).isNull()
     }
 
     @Test
-    fun initialState_hasNoCameraPermission() = runTest {
+    fun initialState_hasNoTreadmillResult() = runTest {
         val viewModel = AICalorieScannerViewModel()
-        val state = viewModel.uiState.value as AICalorieScannerUiState.Success
-        assertThat(state.hasCameraPermission).isFalse()
+        assertThat(viewModel.uiState.value.treadmillResult).isNull()
     }
 
     @Test
-    fun requestCameraPermission_setsPermissionTrue() = runTest {
+    fun initialState_scanModeIsFood() = runTest {
         val viewModel = AICalorieScannerViewModel()
-        viewModel.requestCameraPermission()
-        val state = viewModel.uiState.value as AICalorieScannerUiState.Success
-        assertThat(state.hasCameraPermission).isTrue()
+        assertThat(viewModel.uiState.value.scanMode).isEqualTo(ScanMode.FOOD)
     }
 
     @Test
-    fun startScan_transitionsToScanning() = runTest {
+    fun startScan_setsIsLoadingTrue() = runTest {
         val viewModel = AICalorieScannerViewModel()
         viewModel.startScan()
-        val state = viewModel.uiState.value as AICalorieScannerUiState.Success
-        assertThat(state.scanState).isInstanceOf(ScanState.Scanning::class.java)
+        assertThat(viewModel.uiState.value.isLoading).isTrue()
     }
 
     @Test
-    fun startScan_clearsPreviousResult() = runTest {
+    fun startScan_clearsPreviousError() = runTest {
         val viewModel = AICalorieScannerViewModel()
         viewModel.startScan()
-        val state = viewModel.uiState.value as AICalorieScannerUiState.Success
-        assertThat(state.scanResult).isNull()
+        assertThat(viewModel.uiState.value.error).isNull()
     }
 
     @Test
-    fun startScan_afterDelay_transitionsToResult() = runTest {
+    fun startScan_afterDelay_isLoadingFalse() = runTest {
         val viewModel = AICalorieScannerViewModel()
         viewModel.startScan()
         advanceTimeBy(3000)
         advanceUntilIdle()
-        val state = viewModel.uiState.value as AICalorieScannerUiState.Success
-        assertThat(state.scanState).isInstanceOf(ScanState.Result::class.java)
+        assertThat(viewModel.uiState.value.isLoading).isFalse()
     }
 
     @Test
-    fun startScan_afterDelay_hasScanResult() = runTest {
+    fun startScan_afterDelay_foodModeHasFoodResult() = runTest {
+        val viewModel = AICalorieScannerViewModel()
+        viewModel.setScanMode(ScanMode.FOOD)
+        viewModel.startScan()
+        advanceTimeBy(3000)
+        advanceUntilIdle()
+        assertThat(viewModel.uiState.value.foodResult).isNotNull()
+    }
+
+    @Test
+    fun startScan_afterDelay_treadmillModeHasTreadmillResult() = runTest {
+        val viewModel = AICalorieScannerViewModel()
+        viewModel.setScanMode(ScanMode.TREADMILL)
+        viewModel.startScan()
+        advanceTimeBy(3000)
+        advanceUntilIdle()
+        assertThat(viewModel.uiState.value.treadmillResult).isNotNull()
+    }
+
+    @Test
+    fun setScanMode_changesModeToTreadmill() = runTest {
+        val viewModel = AICalorieScannerViewModel()
+        viewModel.setScanMode(ScanMode.TREADMILL)
+        assertThat(viewModel.uiState.value.scanMode).isEqualTo(ScanMode.TREADMILL)
+    }
+
+    @Test
+    fun reset_afterScan_clearsResults() = runTest {
         val viewModel = AICalorieScannerViewModel()
         viewModel.startScan()
         advanceTimeBy(3000)
         advanceUntilIdle()
-        val state = viewModel.uiState.value as AICalorieScannerUiState.Success
-        assertThat(state.scanResult).isNotNull()
+        viewModel.reset()
+        assertThat(viewModel.uiState.value.foodResult).isNull()
+        assertThat(viewModel.uiState.value.treadmillResult).isNull()
     }
 
     @Test
-    fun startScan_afterDelay_scanResultHasConfidence() = runTest {
+    fun reset_preservesScanMode() = runTest {
         val viewModel = AICalorieScannerViewModel()
+        viewModel.setScanMode(ScanMode.TREADMILL)
         viewModel.startScan()
         advanceTimeBy(3000)
         advanceUntilIdle()
-        val state = viewModel.uiState.value as AICalorieScannerUiState.Success
-        assertThat(state.scanResult!!.confidence).isGreaterThan(0f)
+        viewModel.reset()
+        assertThat(viewModel.uiState.value.scanMode).isEqualTo(ScanMode.TREADMILL)
     }
 
     @Test
-    fun startScan_afterDelay_scanResultHasMeal() = runTest {
+    fun logMeal_setsIsLoggedTrue() = runTest {
         val viewModel = AICalorieScannerViewModel()
-        viewModel.startScan()
-        advanceTimeBy(3000)
-        advanceUntilIdle()
-        val state = viewModel.uiState.value as AICalorieScannerUiState.Success
-        assertThat(state.scanResult!!.meal).isNotNull()
+        viewModel.logMeal()
+        assertThat(viewModel.uiState.value.isLogged).isTrue()
     }
 
     @Test
-    fun resetScan_afterResult_returnsToIdle() = runTest {
+    fun logTreadmill_setsIsLoggedTrue() = runTest {
         val viewModel = AICalorieScannerViewModel()
-        viewModel.startScan()
-        advanceTimeBy(3000)
-        advanceUntilIdle()
-        viewModel.resetScan()
-        val state = viewModel.uiState.value as AICalorieScannerUiState.Success
-        assertThat(state.scanState).isInstanceOf(ScanState.Idle::class.java)
-    }
-
-    @Test
-    fun resetScan_afterResult_clearsScanResult() = runTest {
-        val viewModel = AICalorieScannerViewModel()
-        viewModel.startScan()
-        advanceTimeBy(3000)
-        advanceUntilIdle()
-        viewModel.resetScan()
-        val state = viewModel.uiState.value as AICalorieScannerUiState.Success
-        assertThat(state.scanResult).isNull()
-    }
-
-    @Test
-    fun startScan_beforeDelay_stillScanning() = runTest {
-        val viewModel = AICalorieScannerViewModel()
-        viewModel.startScan()
-        advanceTimeBy(1000)
-        val state = viewModel.uiState.value as AICalorieScannerUiState.Success
-        assertThat(state.scanState).isInstanceOf(ScanState.Scanning::class.java)
-    }
-
-    @Test
-    fun fullScanCycle_idleToScanningToResult() = runTest {
-        val viewModel = AICalorieScannerViewModel()
-        assertThat((viewModel.uiState.value as AICalorieScannerUiState.Success).scanState)
-            .isInstanceOf(ScanState.Idle::class.java)
-        viewModel.startScan()
-        assertThat((viewModel.uiState.value as AICalorieScannerUiState.Success).scanState)
-            .isInstanceOf(ScanState.Scanning::class.java)
-        advanceTimeBy(3000)
-        advanceUntilIdle()
-        assertThat((viewModel.uiState.value as AICalorieScannerUiState.Success).scanState)
-            .isInstanceOf(ScanState.Result::class.java)
+        viewModel.logTreadmill()
+        assertThat(viewModel.uiState.value.isLogged).isTrue()
     }
 }

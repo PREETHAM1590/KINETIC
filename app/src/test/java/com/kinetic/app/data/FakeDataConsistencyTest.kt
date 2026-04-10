@@ -159,7 +159,7 @@ class FakeDataConsistencyTest {
 
     @Test
     fun fakeProfileData_userProfile_hasNonEmptyName() {
-        assertThat(FakeProfileData.userProfile.name).isNotEmpty()
+        assertThat(FakeProfileData.userProfile.displayName).isNotEmpty()
     }
 
     @Test
@@ -179,7 +179,7 @@ class FakeDataConsistencyTest {
 
     @Test
     fun fakeProfileData_stats_positiveWorkoutsCompleted() {
-        assertThat(FakeProfileData.userProfile.stats.workoutsCompleted).isGreaterThan(0)
+        assertThat(FakeProfileData.userStats.workoutsCompleted).isGreaterThan(0)
     }
 
     @Test

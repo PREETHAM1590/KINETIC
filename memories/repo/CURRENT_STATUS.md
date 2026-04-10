@@ -113,17 +113,58 @@ enum class CoachInsightType { INFO, NUDGE, WARNING, CELEBRATION }
 
 ## NEXT PLANS (not started)
 
-### Plan 2 — Predictive Reports + Behavior-Based Membership
-- Flip ReportsScreen from past→future ("You're on track to hit 10k cal this month")
-- Add streak progress bar + streak-locked features to MembershipScreen
+> ⚡ FULL PRODUCT BRAINSTORM COMPLETE (2026-04-09)
+> All decisions saved in: `memories/repo/PRODUCT_BRAINSTORM_DECISIONS.md`
+> Full design spec in: `docs/superpowers/plans/2026-04-09-kinetic-full-product-design-spec.md`
 
-### Plan 3 — Active Workout Intelligence
-- Adaptive rest timer (based on set completion quality)
-- Last Session Ghost (show previous session numbers in muted text)
+### PHASE 2 — Android App Extensions (next to build)
+Priority order:
+1. **Goal-Based Onboarding** (KEYSTONE — replaces hardcoded 2500 cal target)
+2. **Food Scanner Rebuild** (AICalorieScannerScreen — Gemini Vision + IFCT 2017)
+3. **Treadmill Scanner** (Gemini Vision reads treadmill display)
+4. **Google Health Connect** (wearables — steps, HR, sleep)
+5. **Injury/Limitation Tracking** (feeds AI trainer + template filtering)
+6. **Predictive Reports** (past→future framing)
+7. **Behavior-Based Membership** (streak-locked features)
+8. **Active Workout Intelligence** (adaptive rest, last session ghost)
+9. **Gym Services Screen** (dynamic, membership-gated)
 
-### Plan 4 — Diet Reframe + Onboarding Redesign
-- Camera-first Diet screen (scan = primary action)
-- Goal-orientation-first Onboarding (performance vs aesthetics vs health)
+### PHASE 3 — Backend
+- FastAPI (Python) + Gemini Vision
+- Firebase Cloud Functions + IFCT 2017 nutrition
+- Firestore schema + Razorpay payments
+
+### PHASE 4 — Trainer App (separate APK)
+- Feed + client roster home
+- Client detail dashboard cards
+- Workout assignment (template/clone/scratch)
+- TrainerInsightEngine (AI alerts)
+- E2E encrypted chat (Signal Protocol)
+
+### PHASE 5 — Admin Dashboard (Next.js)
+- Firebase Auth + role-based access
+- Dynamic services catalog
+- Revenue analytics (MRR, churn, heatmap)
+- White-label branding system
+- Multi-branch support
+
+### PHASE 6 — Advanced
+- Multi-language (Hindi first)
+- Offline mode (Room + SyncWorker)
+- Progress photos (encrypted Firebase Storage)
+- Biometrics/face gym entry
+- Custom food model training (separate autonomous agent)
+
+### ECOSYSTEM OVERVIEW
+```
+KINETIC = White-label SaaS sold to gyms
+4 products: Client App + Trainer App + Admin Dashboard + Backend
+Business model: Gym pays monthly, white-labels for their members
+Payments: Razorpay + UPI
+Chat: In-app E2E (Signal Protocol — same as WhatsApp)
+AI: Gemini Vision + Pro (MVP) → custom models (future)
+Regional: IFCT 2017 + LLM adjustment, district-level (700+ districts)
+```
 
 ---
 

@@ -8,6 +8,8 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.kinetic.app.data.models.ExperienceLevel
+import com.kinetic.app.data.models.FitnessGoal
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -29,6 +31,9 @@ class UserPreferences @Inject constructor(
         val CONSENT_GIVEN = booleanPreferencesKey("consent_given")
         val CONSENT_VERSION = intPreferencesKey("consent_version")
         val USER_ID = stringPreferencesKey("user_id")
+        val FITNESS_GOAL = stringPreferencesKey("fitness_goal")
+        val TARGET_CALORIES = intPreferencesKey("target_calories")
+        val EXPERIENCE_LEVEL = stringPreferencesKey("experience_level")
     }
 
     val onboardingCompleted: Flow<Boolean> = context.dataStore.data.map { prefs ->
@@ -63,6 +68,18 @@ class UserPreferences @Inject constructor(
         prefs[Keys.USER_ID]
     }
 
+    val fitnessGoal: Flow<FitnessGoal> = context.dataStore.data.map { prefs ->
+        prefs[Keys.FITNESS_GOAL]?.let { FitnessGoal.valueOf(it) } ?: FitnessGoal.GENERAL_FITNESS
+    }
+
+    val targetCalories: Flow<Int> = context.dataStore.data.map { prefs ->
+        prefs[Keys.TARGET_CALORIES] ?: 2500
+    }
+
+    val experienceLevel: Flow<ExperienceLevel> = context.dataStore.data.map { prefs ->
+        prefs[Keys.EXPERIENCE_LEVEL]?.let { ExperienceLevel.valueOf(it) } ?: ExperienceLevel.BEGINNER
+    }
+
     suspend fun setOnboardingCompleted(completed: Boolean) {
         context.dataStore.edit { prefs -> prefs[Keys.ONBOARDING_COMPLETED] = completed }
     }
@@ -92,6 +109,21 @@ class UserPreferences @Inject constructor(
 
     suspend fun setUserId(id: String) {
         context.dataStore.edit { prefs -> prefs[Keys.USER_ID] = id }
+    }
+
+    suspend fun setOnboardingComplete() {
+        context.dataStore.edit { prefs -> prefs[Keys.ONBOARDING_COMPLETED] = true }
+    }
+
+    suspend fun setFitnessGoal(goal: FitnessGoal, targetCalories: Int) {
+        context.dataStore.edit { prefs ->
+            prefs[Keys.FITNESS_GOAL] = goal.name
+            prefs[Keys.TARGET_CALORIES] = targetCalories
+        }
+    }
+
+    suspend fun setExperienceLevel(level: ExperienceLevel) {
+        context.dataStore.edit { prefs -> prefs[Keys.EXPERIENCE_LEVEL] = level.name }
     }
 
     suspend fun clearAll() {

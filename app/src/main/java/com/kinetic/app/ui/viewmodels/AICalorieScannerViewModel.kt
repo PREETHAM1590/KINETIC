@@ -1,71 +1,134 @@
 package com.kinetic.app.ui.viewmodels
 
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.kinetic.app.data.fake.FakeDietData
-import com.kinetic.app.data.models.MealItem
+import com.kinetic.app.data.models.FoodScanResult
+import com.kinetic.app.data.models.ScannedFood
+import com.kinetic.app.data.models.ScanSource
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-data class ScanResult(
-    val meal: MealItem,
-    val confidence: Float
+enum class ScanMode { FOOD, TREADMILL }
+
+data class TreadmillScanResult(
+    val speedKmh: Float = 6.5f,
+    val inclinePct: Float = 2f,
+    val durationMinutes: Int = 30,
+    val estimatedCalories: Int = 0,
+    val estimatedSteps: Int = 0
 )
 
-sealed class AICalorieScannerUiState {
-    object Loading : AICalorieScannerUiState()
-    data class Success(
-        val scanState: ScanState = ScanState.Idle,
-        val scanResult: ScanResult? = null,
-        val hasCameraPermission: Boolean = false
-    ) : AICalorieScannerUiState()
-    data class Error(val message: String) : AICalorieScannerUiState()
-}
+data class AICalorieScannerUiState(
+    val scanMode: ScanMode = ScanMode.FOOD,
+    val isLoading: Boolean = false,
+    val imageUri: Uri? = null,
+    val foodResult: FoodScanResult? = null,
+    val treadmillResult: TreadmillScanResult? = null,
+    val error: String? = null,
+    val isLogged: Boolean = false
+)
 
-sealed class ScanState {
-    object Idle : ScanState()
-    object Scanning : ScanState()
-    object Result : ScanState()
-    data class Error(val message: String) : ScanState()
-}
+@HiltViewModel
+class AICalorieScannerViewModel @Inject constructor() : ViewModel() {
 
-class AICalorieScannerViewModel : ViewModel() {
-    private val _uiState = MutableStateFlow<AICalorieScannerUiState>(
-        AICalorieScannerUiState.Success()
-    )
+    private val _uiState = MutableStateFlow(AICalorieScannerUiState())
     val uiState: StateFlow<AICalorieScannerUiState> = _uiState.asStateFlow()
 
-    fun requestCameraPermission() {
-        val current = _uiState.value
-        if (current is AICalorieScannerUiState.Success) {
-            _uiState.value = current.copy(hasCameraPermission = true)
+    fun setScanMode(mode: ScanMode) {
+        _uiState.update {
+            AICalorieScannerUiState(scanMode = mode)
         }
     }
 
+    fun setImage(uri: Uri) {
+        _uiState.update { it.copy(imageUri = uri, foodResult = null, treadmillResult = null, error = null) }
+    }
+
     fun startScan() {
-        val current = _uiState.value
-        if (current !is AICalorieScannerUiState.Success) return
-
-        _uiState.value = current.copy(scanState = ScanState.Scanning, scanResult = null)
-
+        _uiState.update { it.copy(isLoading = true, error = null, foodResult = null, treadmillResult = null) }
         viewModelScope.launch {
-            delay(3000)
-            val fakeMeal = FakeDietData.todayMeals.getOrNull(1) ?: FakeDietData.todayMeals.first()
-            val result = ScanResult(meal = fakeMeal, confidence = 0.92f)
-            val state = _uiState.value
-            if (state is AICalorieScannerUiState.Success) {
-                _uiState.value = state.copy(scanState = ScanState.Result, scanResult = result)
+            try {
+                delay(2000L)
+                if (_uiState.value.scanMode == ScanMode.FOOD) {
+                    val fakeResult = FoodScanResult(
+                        foods = listOf(
+                            ScannedFood("Dal Makhani", 0.91f, 200f, 131f, 7f, 17f, 4.5f),
+                            ScannedFood("Basmati Rice", 0.88f, 150f, 130f, 2.7f, 28f, 0.3f),
+                            ScannedFood("Paneer Tikka", 0.85f, 100f, 265f, 19f, 5f, 18f)
+                        ),
+                        rawImageDescription = "Indian meal with dal, rice and paneer",
+                        source = ScanSource.GEMINI_VISION
+                    )
+                    _uiState.update { it.copy(isLoading = false, foodResult = fakeResult) }
+                } else {
+                    val speedKmh = 6.5f
+                    val inclinePct = 2f
+                    val durationMinutes = 30
+                    val estimatedCalories = (durationMinutes * speedKmh * 0.65f).toInt()
+                    val estimatedSteps = (durationMinutes.toFloat() * speedKmh * 21.67f).toInt()
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            treadmillResult = TreadmillScanResult(
+                                speedKmh = speedKmh,
+                                inclinePct = inclinePct,
+                                durationMinutes = durationMinutes,
+                                estimatedCalories = estimatedCalories,
+                                estimatedSteps = estimatedSteps
+                            )
+                        )
+                    }
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isLoading = false, error = e.message ?: "Scan failed") }
             }
         }
     }
 
-    fun resetScan() {
-        val current = _uiState.value
-        if (current is AICalorieScannerUiState.Success) {
-            _uiState.value = current.copy(scanState = ScanState.Idle, scanResult = null)
+    fun logMeal() {
+        _uiState.update { it.copy(isLogged = true) }
+    }
+
+    fun scanTreadmill() {
+        _uiState.update { it.copy(isLoading = true, error = null, treadmillResult = null) }
+        viewModelScope.launch {
+            try {
+                delay(1500L)
+                val speedKmh = 6.5f
+                val inclinePct = 2f
+                val durationMinutes = 30
+                val estimatedCalories = (durationMinutes * speedKmh * 0.65f).toInt()
+                val estimatedSteps = (durationMinutes.toFloat() * speedKmh * 21.67f).toInt()
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        treadmillResult = TreadmillScanResult(
+                            speedKmh = speedKmh,
+                            inclinePct = inclinePct,
+                            durationMinutes = durationMinutes,
+                            estimatedCalories = estimatedCalories,
+                            estimatedSteps = estimatedSteps
+                        )
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isLoading = false, error = e.message ?: "Scan failed") }
+            }
         }
+    }
+
+    fun logTreadmill() {
+        _uiState.update { it.copy(isLogged = true) }
+    }
+
+    fun reset() {
+        _uiState.update { AICalorieScannerUiState(scanMode = it.scanMode) }
     }
 }

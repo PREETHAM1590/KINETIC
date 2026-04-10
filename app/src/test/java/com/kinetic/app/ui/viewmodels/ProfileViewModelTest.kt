@@ -47,7 +47,7 @@ class ProfileViewModelTest {
         advanceUntilIdle()
 
         val profile = viewModel.uiState.value.profile!!
-        assertThat(profile.name).isNotEmpty()
+        assertThat(profile.displayName).isNotEmpty()
         assertThat(profile.email).contains("@")
     }
 }

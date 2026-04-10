@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.kinetic.app.data.models.Achievement
 import com.kinetic.app.data.models.UserProfile
+import com.kinetic.app.data.models.UserStats
 import com.kinetic.app.data.repository.ProfileRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,6 +18,7 @@ import javax.inject.Inject
 data class ProfileUiState(
     val isLoading: Boolean = true,
     val profile: UserProfile? = null,
+    val stats: UserStats? = null,
     val achievements: List<Achievement> = emptyList(),
     val error: String? = null
 )
@@ -37,12 +39,14 @@ class ProfileViewModel @Inject constructor(
         viewModelScope.launch {
             combine(
                 profileRepository.getProfile(),
-                profileRepository.getAchievements()
-            ) { profile, achievements ->
+                profileRepository.getAchievements(),
+                profileRepository.getStats()
+            ) { profile, achievements, stats ->
                 ProfileUiState(
                     isLoading = false,
                     profile = profile,
-                    achievements = achievements
+                    achievements = achievements,
+                    stats = stats
                 )
             }.catch { e ->
                 _uiState.value = _uiState.value.copy(isLoading = false, error = e.message)

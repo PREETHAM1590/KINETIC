@@ -85,6 +85,8 @@ dependencies {
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.0")
     testImplementation("app.cash.turbine:turbine:1.0.0")
     testImplementation("com.google.truth:truth:1.4.2")
+    testImplementation("org.mockito:mockito-core:5.10.0")
+    testImplementation("org.mockito.kotlin:mockito-kotlin:5.2.1")
     testImplementation("com.google.dagger:hilt-android-testing:2.51")
     kspTest("com.google.dagger:hilt-android-compiler:2.51")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
